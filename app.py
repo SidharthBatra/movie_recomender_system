@@ -25,7 +25,17 @@ def fetch_rating(movie_id):
 # =======================
 movies_dict = pickle.load(open('movies_dict.pkl', 'rb'))
 movies = pd.DataFrame(movies_dict)
-similarity = pickle.load(open('similarity.pkl', 'rb'))
+# import pickle
+import gzip
+
+# Compress your similarity.pkl
+with open("similarity.pkl", "rb") as f:
+    similarity = pickle.load(f)
+
+with gzip.open("similarity_compressed.pkl.gz", "wb") as f:
+    pickle.dump(similarity, f)
+
+# similarity = pickle.load(open('similarity.pkl', 'rb'))
 
 # =======================
 # Streamlit UI
@@ -73,3 +83,4 @@ if st.button("🔍 Show Recommendations"):
             # Convert rating to stars
             stars = "⭐" * int(ratings[idx] // 2)  # TMDB ratings are out of 10, so divide by 2
             st.markdown(f"<p style='text-align:center;'>{stars} ({ratings[idx]:.1f}/10)</p>", unsafe_allow_html=True)
+
