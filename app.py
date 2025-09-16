@@ -2,6 +2,7 @@ import streamlit as st
 import pickle 
 import pandas as pd
 import requests
+import os
 
 # =======================
 # Utility Functions
@@ -23,11 +24,26 @@ def fetch_rating(movie_id):
 # =======================
 # Load Data
 # =======================
+URL = "https://drive.google.com/uc?export=download&id=1TmCgauHqBtFsub-33SjLkRr-_4OQCDC4"
+LOCAL_FILE = "similarity.pkl"
+
+# Download similarity file if not already present
+@st.cache_resource
+def load_similarity():
+    if not os.path.exists(LOCAL_FILE):
+        with st.spinner("📥 Downloading similarity matrix... Please wait."):
+            response = requests.get(URL, stream=True)
+            response.raise_for_status()
+            with open(LOCAL_FILE, "wb") as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+    with open(LOCAL_FILE, "rb") as f:
+        return pickle.load(f)
+
+# Load movies and similarity
 movies_dict = pickle.load(open('movies_dict.pkl', 'rb'))
 movies = pd.DataFrame(movies_dict)
-
-
-similarity = pickle.load(open('similarity.pkl', 'rb'))
+similarity = load_similarity()
 
 # =======================
 # Streamlit UI
@@ -75,5 +91,3 @@ if st.button("🔍 Show Recommendations"):
             # Convert rating to stars
             stars = "⭐" * int(ratings[idx] // 2)  # TMDB ratings are out of 10, so divide by 2
             st.markdown(f"<p style='text-align:center;'>{stars} ({ratings[idx]:.1f}/10)</p>", unsafe_allow_html=True)
-
-
